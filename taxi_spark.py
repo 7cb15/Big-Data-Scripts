@@ -1,29 +1,4 @@
 
-import sys
-import pyspark
-import fiona
-import fiona.crs
-import shapely
-import rtree
-import pyproj
-import shapely.geometry as geom
-import pandas as pd
-import geopandas as gpd
-import csv
-import os
-
-sc = pyspark.SparkContext()
-
-neighbor_shape = sys.argv[1]
-borough_shape = sys.argv[2]
-yellow_data = sys.argv[3]
-
-#read in spatial data
-neighborhoods = gpd.read_file(neighbor_shape).to_crs(fiona.crs.from_epsg(2263))
-
-#read in spatial data
-boroughs = gpd.read_file(borough_shape).to_crs(fiona.crs.from_epsg(2263))
-
 def processTrips(pid, records):
     if pid==0:
         next(records)
@@ -34,6 +9,8 @@ def processTrips(pid, records):
     import shapely
     import rtree
     import pyproj
+    import shapely.geometry as geom
+    import csv
     reader = csv.reader(records)
     proj = pyproj.Proj(init="epsg:2263", preserve_units=True)
     neighborhoods = gpd.read_file(neighbor_shape).to_crs(fiona.crs.from_epsg(2263))
@@ -82,19 +59,38 @@ def processTrips(pid, records):
 
     return counts.items()
             
-rdd = sc.textFile(yellow_data)
-counts = rdd.mapPartitionsWithIndex(processTrips) \
-            .reduceByKey(lambda x,y: x+y) \
-    .collect()
+
+if __name__=='__main__':
+    import pyspark
+    import geopandas as gpd
+    import sys
+    import pandas as pd
+    import rtree
+    import fiona
+    import fiona.crs
+    import shapely
+    import rtree
+    import pyproj
+    import shapely.geometry as geom
+    import csv
+    sc = pyspark.SparkContext()
+    neighbor_shape = sys.argv[1]
+    borough_shape = sys.argv[2]
+    yellow_data = sys.argv[3]
+    neighborhoods = gpd.read_file(neighbor_shape).to_crs(fiona.crs.from_epsg(2263))
+    boroughs = gpd.read_file(borough_shape).to_crs(fiona.crs.from_epsg(2263))
+
+    rdd = sc.textFile(yellow_data)
+    counts = rdd.mapPartitionsWithIndex(processTrips).reduceByKey(lambda x,y: x+y).collect()
     
-countsPerNeighborhood = list(map(lambda x: (x[0][0], x[0][1], x[1]), counts))
-mapped_counts = list(map(lambda x: (neighborhoods['neighborhood'][x[0]], boroughs['boroname'][x[1]], x[2]), countsPerNeighborhood))
-df = pd.DataFrame(mapped_counts).sort_values(2,ascending=False)
+    countsPerNeighborhood = list(map(lambda x: (x[0][0], x[0][1], x[1]), counts))
+    mapped_counts = list(map(lambda x: (neighborhoods['neighborhood'][x[0]], boroughs['boroname'][x[1]], x[2]), countsPerNeighborhood))
+    df = pd.DataFrame(mapped_counts).sort_values(2,ascending=False)
 
-borough_list = ['Staten Island','Manhattan','Brooklyn','Queens','Bronx']
+    borough_list = ['Staten Island','Manhattan','Brooklyn','Queens','Bronx']
 
-for i in borough_list:
-    df_filt = df[df[1]==i]
-    df_filt.sort_values(2,ascending=False,inplace=True)
-    top_neighbs = list(df_filt[0].head(3))
-    print("Top Neighborhoods for "+i+ ": {}".format(top_neighbs))
+    for i in borough_list:
+        df_filt = df[df[1]==i]
+        df_filt.sort_values(2,ascending=False,inplace=True)
+        top_neighbs = list(df_filt[0].head(3))
+        print("Top Neighborhoods for "+i+ ": {}".format(top_neighbs))
