@@ -1,4 +1,3 @@
-
 def processTrips(pid, records):
     if pid==0:
         next(records)
@@ -74,9 +73,9 @@ if __name__=='__main__':
     import shapely.geometry as geom
     import csv
     sc = pyspark.SparkContext()
-    neighbor_shape = 'hdfs:///tmp/bdm/neighborhoods.geojson'
-    borough_shape = 'hdfs:///tmp/bdm/boroughs.geojson'
-    yellow_data = 'hdfs:///tmp/bdm/yellow_tripdata_2011-05.csv'
+    neighbor_shape = 'neighborhoods.geojson'
+    borough_shape = 'boroughs.geojson'
+    yellow_data = sys.argv[1]
     neighborhoods = gpd.read_file(neighbor_shape).to_crs(fiona.crs.from_epsg(2263))
     boroughs = gpd.read_file(borough_shape).to_crs(fiona.crs.from_epsg(2263))
 
