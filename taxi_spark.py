@@ -74,9 +74,9 @@ if __name__=='__main__':
     import shapely.geometry as geom
     import csv
     sc = pyspark.SparkContext()
-    neighbor_shape = sys.argv[1]
-    borough_shape = sys.argv[2]
-    yellow_data = sys.argv[3]
+    neighbor_shape = 'hdfs:///tmp/bdm/neighborhoods.geojson'
+    borough_shape = 'hdfs:///tmp/bdm/boroughs.geojson'
+    yellow_data = 'hdfs:///tmp/bdm/yellow_tripdata_2011-05.csv'
     neighborhoods = gpd.read_file(neighbor_shape).to_crs(fiona.crs.from_epsg(2263))
     boroughs = gpd.read_file(borough_shape).to_crs(fiona.crs.from_epsg(2263))
 
