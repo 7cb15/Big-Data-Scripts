@@ -10,7 +10,6 @@ import shapely.geometry as geom
 import pandas as pd
 import geopandas as gpd
 import csv
-import gzip
 import os
 
 sc = pyspark.SparkContext()
@@ -18,8 +17,6 @@ sc = pyspark.SparkContext()
 neighbor_shape = sys.argv[1]
 borough_shape = sys.argv[2]
 yellow_data = sys.argv[3]
-
-yellow_data = gzip.open(sys.argv[3], 'rb')
 
 #read in spatial data
 neighborhoods = gpd.read_file(neighbor_shape).to_crs(fiona.crs.from_epsg(2263))
@@ -32,7 +29,11 @@ def processTrips(pid, records):
         next(records)
     counts = {}
     import rtree
-  
+    import fiona
+    import fiona.crs
+    import shapely
+    import rtree
+    import pyproj
     reader = csv.reader(records)
     proj = pyproj.Proj(init="epsg:2263", preserve_units=True)
     neighborhoods = gpd.read_file(neighbor_shape).to_crs(fiona.crs.from_epsg(2263))
